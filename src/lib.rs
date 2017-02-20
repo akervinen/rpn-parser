@@ -31,8 +31,17 @@ fn op_div(v1: f64, v2: f64) -> f64 {
 fn op_mod(v1: f64, v2: f64) -> f64 {
     v1 % v2
 }
+fn op_powf(v1: f64, v2: f64) -> f64 {
+    v1.powf(v2)
+}
 fn op_sin(v1: f64) -> f64 {
     v1.sin()
+}
+fn op_ln(v1: f64) -> f64 {
+    v1.ln()
+}
+fn op_log10(v1: f64) -> f64 {
+    v1.log10()
 }
 
 lazy_static! {
@@ -55,7 +64,10 @@ lazy_static! {
         m.insert("*".into(), Operator::Binary(op_mul));
         m.insert("/".into(), Operator::Binary(op_div));
         m.insert("%".into(), Operator::Binary(op_mod));
+        m.insert("^".into(), Operator::Binary(op_powf));
         m.insert("sin".into(), Operator::Unary(op_sin));
+        m.insert("ln".into(), Operator::Unary(op_ln));
+        m.insert("log10".into(), Operator::Unary(op_log10));
         m
     };
 }
