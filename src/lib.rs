@@ -35,6 +35,12 @@ fn op_sin(v1: f64) -> f64 {
 }
 
 lazy_static! {
+    static ref CONSTS: HashMap<String, f64> = {
+        let mut m = HashMap::new();
+        m.insert("pi".into(), consts::PI);
+        m
+    };
+
     static ref OPERATORS: HashMap<String, Operator> = {
         let mut m = HashMap::new();
         m.insert("+".into(), Operator::Binary(op_add));
@@ -72,26 +78,33 @@ pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
                 stack.push(val);
             }
             Identifier(ref op) => {
-                match OPERATORS.get(op) {
-                    Some(&Operator::Binary(cb)) => {
-                        if stack.len() < 2 {
-                            return Err("not enough operands, expected 2".into());
-                        }
-                        let val2 = stack.pop().unwrap();
-                        let val1 = stack.pop().unwrap();
-
-                        stack.push(cb(val1, val2));
-                    }
-                    Some(&Operator::Unary(cb)) => {
-                        if stack.len() < 1 {
-                            return Err("not enough operands, expected 1".into());
-                        }
-                        let val1 = stack.pop().unwrap();
-
-                        stack.push(cb(val1));
+                match CONSTS.get(op) {
+                    Some(&val) => {
+                        stack.push(val);
                     }
                     None => {
-                        return Err(format!("unimplemented operator {}", op));
+                        match OPERATORS.get(op) {
+                            Some(&Operator::Binary(cb)) => {
+                                if stack.len() < 2 {
+                                    return Err("not enough operands, expected 2".into());
+                                }
+                                let val2 = stack.pop().unwrap();
+                                let val1 = stack.pop().unwrap();
+
+                                stack.push(cb(val1, val2));
+                            }
+                            Some(&Operator::Unary(cb)) => {
+                                if stack.len() < 1 {
+                                    return Err("not enough operands, expected 1".into());
+                                }
+                                let val1 = stack.pop().unwrap();
+
+                                stack.push(cb(val1));
+                            }
+                            None => {
+                                return Err(format!("unimplemented operator {}", op));
+                            }
+                        }
                     }
                 }
             }
