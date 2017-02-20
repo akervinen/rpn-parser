@@ -16,16 +16,39 @@ pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
     for token in tokens {
         match token {
             Operand(val) => {
+                println!("push: {}", val);
                 stack.push(val);
             },
             Operator(ref op) if op == "+" => {
-                let val1 = stack.pop().expect("not enough operands");
                 let val2 = stack.pop().expect("not enough operands");
+                let val1 = stack.pop().expect("not enough operands");
 
+                println!("+ {}, {}", val1, val2);
                 stack.push(val1 + val2);
             },
-            Operator(_) => {
-                unimplemented!()
+            Operator(ref op) if op == "-" => {
+                let val2 = stack.pop().expect("not enough operands");
+                let val1 = stack.pop().expect("not enough operands");
+
+                println!("- {}, {}", val1, val2);
+                stack.push(val1 - val2);
+            },
+            Operator(ref op) if op == "x" => {
+                let val2 = stack.pop().expect("not enough operands");
+                let val1 = stack.pop().expect("not enough operands");
+
+                println!("x {}, {}", val1, val2);
+                stack.push(val1 * val2);
+            },
+            Operator(ref op) if op == "/" => {
+                let val2 = stack.pop().expect("not enough operands");
+                let val1 = stack.pop().expect("not enough operands");
+
+                println!("/ {}, {}", val1, val2);
+                stack.push(val1 / val2);
+            },
+            Operator(ref op) => {
+                return Err(format!("unimplemented operator {}", op));
             }
         }
     }
