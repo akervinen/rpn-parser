@@ -152,26 +152,26 @@ mod tests {
 
     #[test]
     fn eval_multiply() {
-        assert_eq!(evaluate("1 2 *").unwrap(), 2.0);
+        assert_eq!(evaluate("1 2 x").unwrap(), 2.0);
     }
 
     #[test]
     fn eval_multiply_multiple() {
-        assert_eq!(evaluate("1 2 * 3 *").unwrap(), 6.0);
+        assert_eq!(evaluate("1 2 x 3 x").unwrap(), 6.0);
     }
 
     #[test]
     fn eval_divide() {
-        assert_eq!(evaluate("1 2 /").unwrap(), 2.0);
+        assert_eq!(evaluate("1 2 /").unwrap(), 0.5);
     }
 
     #[test]
     fn eval_divide_multiple() {
-        assert_eq!(evaluate("1 2 * 3 *").unwrap(), 6.0);
+        assert_eq!(evaluate("1 2 / 2 /").unwrap(), 0.25);
     }
 
     #[test]
-    fn eval_mixed_Identifiers() {
-        assert_eq!(evaluate("1 2 + 3 * 4 -").unwrap(), 5.0);
+    fn eval_mixed_operators() {
+        assert_eq!(evaluate("1 2 + 3 x 4 -").unwrap(), 5.0);
     }
 }
