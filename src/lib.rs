@@ -194,4 +194,9 @@ mod tests {
     fn eval_mixed_operators() {
         assert_eq!(evaluate("1 2 + 3 x 4 -").unwrap(), 5.0);
     }
+
+    #[test]
+    fn eval_text_operator() {
+        assert_eq!(evaluate("pi 2 / sin").unwrap(), 1.0);
+    }
 }
