@@ -1,4 +1,52 @@
+#[derive(Debug)]
+pub enum Token {
+    Operand(f64),
+    Operator(String),
+}
+
+fn parse(expr: &str) -> Result<Vec<Token>, String> {
+    Ok(vec![Token::Operand(0.0)])
+}
+
+pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
+    use Token::*;
+    
+    let mut stack = Vec::<f64>::new();
+
+    for token in tokens {
+        match token {
+            Operand(val) => {
+                stack.push(val);
+            },
+            Operator(ref op) if op == "+" => {
+                let val1 = stack.pop().expect("not enough operands");
+                let val2 = stack.pop().expect("not enough operands");
+
+                stack.push(val1 + val2);
+            },
+            Operator(_) => {
+                unimplemented!()
+            }
+        }
+    }
+
+    if stack.len() == 1 {
+        Ok(stack.pop().unwrap())
+    } else {
+        Err("too many operands".into())
+    }
+}
+
 pub fn evaluate(expr: &str) -> Result<f64, String> {
+    println!("input: {:?}", expr);
+
+    let tokens = try!(parse(expr));
+
+    println!("tokens:");
+    for token in &tokens {
+        println!("{:?}", token);
+    }
+
     Ok(0.0)
 }
 
@@ -19,7 +67,7 @@ mod tests {
     }
 
     #[test]
-        fn eval_one_decimal_operand() {
+    fn eval_one_decimal_operand() {
         assert_eq!(evaluate("0.5").unwrap(), 0.5);
         assert_eq!(evaluate("-0.5").unwrap(), -0.5);
     }
@@ -66,12 +114,12 @@ mod tests {
     }
 
     #[test]
-        fn eval_divide() {
+    fn eval_divide() {
         assert_eq!(evaluate("1 2 /").unwrap(), 2.0);
     }
-    
+
     #[test]
-        fn eval_divide_multiple() {
+    fn eval_divide_multiple() {
         assert_eq!(evaluate("1 2 * 3 *").unwrap(), 6.0);
     }
 
