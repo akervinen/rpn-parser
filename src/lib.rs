@@ -113,22 +113,15 @@ pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
         }
     }
 
-    if stack.len() == 1 {
-        Ok(stack.pop().unwrap())
-    } else {
-        Err("too many operands".into())
+    match stack.len() {
+        0 => Err("empty expression".into()),
+        1 => Ok(stack.pop().unwrap()),
+        _ => Err("too many operands".into())
     }
 }
 
 pub fn evaluate(expr: &str) -> Result<f64, String> {
-    println!("input: {:?}", expr);
-
     let tokens = try!(parse(expr));
-
-    println!("tokens:");
-    for token in &tokens {
-        println!("{:?}", token);
-    }
 
     execute(tokens)
 }
