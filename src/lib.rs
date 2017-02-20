@@ -40,6 +40,7 @@ lazy_static! {
     static ref CONSTS: HashMap<String, f64> = {
         let mut m = HashMap::new();
         m.insert("pi".into(), consts::PI);
+        m.insert("e".into(), consts::E);
         m
     };
 
