@@ -1,3 +1,7 @@
+#[macro_use]
+extern crate lazy_static;
+
+use std::collections::HashMap;
 use std::f64::consts;
 
 #[derive(Debug)]
@@ -6,16 +10,50 @@ pub enum Token {
     Identifier(String),
 }
 
+enum Operator {
+    Unary(fn(f64) -> f64),
+    Binary(fn(f64, f64) -> f64),
+}
+
+fn op_add(v1: f64, v2: f64) -> f64 {
+    v1 + v2
+}
+fn op_sub(v1: f64, v2: f64) -> f64 {
+    v1 - v2
+}
+fn op_mul(v1: f64, v2: f64) -> f64 {
+    v1 * v2
+}
+fn op_div(v1: f64, v2: f64) -> f64 {
+    v1 / v2
+}
+fn op_mod(v1: f64, v2: f64) -> f64 {
+    v1 % v2
+}
+fn op_sin(v1: f64) -> f64 {
+    v1.sin()
+}
+
+lazy_static! {
+    static ref OPERATORS: HashMap<String, Operator> = {
+        let mut m = HashMap::new();
+        m.insert("+".into(), Operator::Binary(op_add));
+        m.insert("-".into(), Operator::Binary(op_sub));
+        m.insert("x".into(), Operator::Binary(op_mul));
+        m.insert("*".into(), Operator::Binary(op_mul));
+        m.insert("/".into(), Operator::Binary(op_div));
+        m.insert("%".into(), Operator::Binary(op_mod));
+        m.insert("sin".into(), Operator::Unary(op_sin));
+        m
+    };
+}
+
 fn parse(expr: &str) -> Result<Vec<Token>, String> {
     Ok(expr.split_whitespace()
         .map(|part| {
             match part.parse::<f64>() {
-                Ok(num) => {
-                    Token::Number(num)
-                },
-                Err(_) => {
-                    Token::Identifier(part.into())
-                }
+                Ok(num) => Token::Number(num),
+                Err(_) => Token::Identifier(part.into()),
             }
         })
         .into_iter()
@@ -24,7 +62,7 @@ fn parse(expr: &str) -> Result<Vec<Token>, String> {
 
 pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
     use Token::*;
-    
+
     let mut stack = Vec::<f64>::new();
 
     for token in tokens {
@@ -32,67 +70,30 @@ pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
             Number(val) => {
                 println!("push: {}", val);
                 stack.push(val);
-            },
-            Identifier(ref op) if op == "+" => {
-                if stack.len() < 2 {
-                    return Err("not enough operands".into());
-                }
-
-                let val2 = stack.pop().unwrap();
-                let val1 = stack.pop().unwrap();
-
-                println!("{} + {}", val1, val2);
-                stack.push(val1 + val2);
-            },
-            Identifier(ref op) if op == "-" => {
-                if stack.len() < 2 {
-                    return Err("not enough operands".into());
-                }
-
-                let val2 = stack.pop().unwrap();
-                let val1 = stack.pop().unwrap();
-
-                println!("{} - {}", val1, val2);
-                stack.push(val1 - val2);
-            },
-            Identifier(ref op) if op == "x" => {
-                if stack.len() < 2 {
-                    return Err("not enough operands".into());
-                }
-
-                let val2 = stack.pop().unwrap();
-                let val1 = stack.pop().unwrap();
-
-                println!("{} × {}", val1, val2);
-                stack.push(val1 * val2);
-            },
-            Identifier(ref op) if op == "/" => {
-                if stack.len() < 2 {
-                    return Err("not enough operands".into());
-                }
-
-                let val2 = stack.pop().unwrap();
-                let val1 = stack.pop().unwrap();
-
-                println!("{} / {}", val1, val2);
-                stack.push(val1 / val2);
-            },
-            Identifier(ref op) if op == "sin" => {
-                if stack.len() < 1 {
-                    return Err("not enough operands".into());
-                }
-
-                let val = stack.pop().unwrap();
-
-                println!("sin {}", val);
-                stack.push(val.sin());
-            },
-            Identifier(ref op) if op == "pi" => {
-                println!("pi");
-                stack.push(consts::PI);
-            },
+            }
             Identifier(ref op) => {
-                return Err(format!("unimplemented Identifier {}", op));
+                match OPERATORS.get(op) {
+                    Some(&Operator::Binary(cb)) => {
+                        if stack.len() < 2 {
+                            return Err("not enough operands, expected 2".into());
+                        }
+                        let val2 = stack.pop().unwrap();
+                        let val1 = stack.pop().unwrap();
+
+                        stack.push(cb(val1, val2));
+                    }
+                    Some(&Operator::Unary(cb)) => {
+                        if stack.len() < 1 {
+                            return Err("not enough operands, expected 1".into());
+                        }
+                        let val1 = stack.pop().unwrap();
+
+                        stack.push(cb(val1));
+                    }
+                    None => {
+                        return Err(format!("unimplemented operator {}", op));
+                    }
+                }
             }
         }
     }
