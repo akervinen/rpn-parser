@@ -2,11 +2,18 @@ extern crate rpn_parser;
 
 fn main() {
     use rpn_parser::Token;
+    use rpn_parser::Token::*;
 
-    let tokens: Vec<rpn_parser::Token> = vec![
-        Token::Operand(11.0),
-        Token::Operand(22.0),
-        Token::Operator("+".into())
+    let tokens: Vec<Token> = vec![
+        Operand(5.0),
+        Operand(1.0),
+        Operand(2.0),
+        Operator("+".into()),
+        Operand(4.0),
+        Operator("x".into()),
+        Operator("+".into()),
+        Operand(3.0),
+        Operator("-".into())
     ];
 
     println!("{:?}", rpn_parser::execute(tokens).unwrap());
