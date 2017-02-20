@@ -16,5 +16,14 @@ fn main() {
         Operator("-".into())
     ];
 
-    println!("{:?}", rpn_parser::execute(tokens).unwrap());
+    println!("= {:?}", rpn_parser::execute(tokens).unwrap());
+
+    let tokens: Vec<Token> = vec![
+        Operator("pi".into()),
+        Operand(2.0),
+        Operator("/".into()),
+        Operator("sin".into())
+    ];
+
+    println!("= {:?}", rpn_parser::execute(tokens).unwrap());
 }
