@@ -45,6 +45,8 @@ lazy_static! {
         let mut m = HashMap::new();
         m.insert("+".into(), Operator::Binary(op_add));
         m.insert("-".into(), Operator::Binary(op_sub));
+        m.insert("−".into(), Operator::Binary(op_sub));
+        m.insert("×".into(), Operator::Binary(op_mul));
         m.insert("x".into(), Operator::Binary(op_mul));
         m.insert("*".into(), Operator::Binary(op_mul));
         m.insert("/".into(), Operator::Binary(op_div));
