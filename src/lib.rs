@@ -4,8 +4,7 @@ extern crate lazy_static;
 use std::collections::HashMap;
 use std::f64::consts;
 
-#[derive(Debug)]
-pub enum Token {
+enum Token {
     Number(f64),
     Identifier(String),
 }
@@ -68,7 +67,7 @@ fn parse(expr: &str) -> Result<Vec<Token>, String> {
         .collect())
 }
 
-pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
+fn execute(tokens: Vec<Token>) -> Result<f64, String> {
     use Token::*;
 
     let mut stack = Vec::<f64>::new();
@@ -76,7 +75,6 @@ pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
     for token in tokens {
         match token {
             Number(val) => {
-                println!("push: {}", val);
                 stack.push(val);
             }
             Identifier(ref op) => {
