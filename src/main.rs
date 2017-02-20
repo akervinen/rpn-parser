@@ -1,5 +1,15 @@
 extern crate rpn_parser;
 
+use std::env;
+
 fn main() {
-    println!("{:?}", rpn_parser::evaluate("5 1 2 + 4 × + 3 −").unwrap());
+    let args: Vec<String> = env::args().skip(1).collect();
+
+    if args.len() == 0 {
+        println!("usage: rpn-parser <expression>");
+        return;
+    }
+
+    let line = args.join(" ");
+    println!("{}", rpn_parser::evaluate(&line).unwrap());
 }
