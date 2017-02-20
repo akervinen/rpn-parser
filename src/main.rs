@@ -5,24 +5,24 @@ fn main() {
     use rpn_parser::Token::*;
 
     let tokens: Vec<Token> = vec![
-        Operand(5.0),
-        Operand(1.0),
-        Operand(2.0),
-        Operator("+".into()),
-        Operand(4.0),
-        Operator("x".into()),
-        Operator("+".into()),
-        Operand(3.0),
-        Operator("-".into())
+        Number(5.0),
+        Number(1.0),
+        Number(2.0),
+        Identifier("+".into()),
+        Number(4.0),
+        Identifier("x".into()),
+        Identifier("+".into()),
+        Number(3.0),
+        Identifier("-".into())
     ];
 
     println!("= {:?}", rpn_parser::execute(tokens).unwrap());
 
     let tokens: Vec<Token> = vec![
-        Operator("pi".into()),
-        Operand(2.0),
-        Operator("/".into()),
-        Operator("sin".into())
+        Identifier("pi".into()),
+        Number(2.0),
+        Identifier("/".into()),
+        Identifier("sin".into())
     ];
 
     println!("= {:?}", rpn_parser::execute(tokens).unwrap());

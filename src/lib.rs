@@ -2,12 +2,24 @@ use std::f64::consts;
 
 #[derive(Debug)]
 pub enum Token {
-    Operand(f64),
-    Operator(String),
+    Number(f64),
+    Identifier(String),
 }
 
 fn parse(expr: &str) -> Result<Vec<Token>, String> {
-    Ok(vec![Token::Operand(0.0)])
+    Ok(expr.split_whitespace()
+        .map(|part| {
+            match part.parse::<f64>() {
+                Ok(num) => {
+                    Token::Number(num)
+                },
+                Err(_) => {
+                    Token::Identifier(part.into())
+                }
+            }
+        })
+        .into_iter()
+        .collect())
 }
 
 pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
@@ -17,50 +29,50 @@ pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
 
     for token in tokens {
         match token {
-            Operand(val) => {
+            Number(val) => {
                 println!("push: {}", val);
                 stack.push(val);
             },
-            Operator(ref op) if op == "+" => {
+            Identifier(ref op) if op == "+" => {
                 let val2 = stack.pop().expect("not enough operands");
                 let val1 = stack.pop().expect("not enough operands");
 
                 println!("{} + {}", val1, val2);
                 stack.push(val1 + val2);
             },
-            Operator(ref op) if op == "-" => {
+            Identifier(ref op) if op == "-" => {
                 let val2 = stack.pop().expect("not enough operands");
                 let val1 = stack.pop().expect("not enough operands");
 
                 println!("{} - {}", val1, val2);
                 stack.push(val1 - val2);
             },
-            Operator(ref op) if op == "x" => {
+            Identifier(ref op) if op == "x" => {
                 let val2 = stack.pop().expect("not enough operands");
                 let val1 = stack.pop().expect("not enough operands");
 
                 println!("{} × {}", val1, val2);
                 stack.push(val1 * val2);
             },
-            Operator(ref op) if op == "/" => {
+            Identifier(ref op) if op == "/" => {
                 let val2 = stack.pop().expect("not enough operands");
                 let val1 = stack.pop().expect("not enough operands");
 
                 println!("{} / {}", val1, val2);
                 stack.push(val1 / val2);
             },
-            Operator(ref op) if op == "sin" => {
+            Identifier(ref op) if op == "sin" => {
                 let val = stack.pop().expect("not enough operands");
 
                 println!("sin {}", val);
                 stack.push(val.sin());
             },
-            Operator(ref op) if op == "pi" => {
+            Identifier(ref op) if op == "pi" => {
                 println!("pi");
                 stack.push(consts::PI);
             },
-            Operator(ref op) => {
-                return Err(format!("unimplemented operator {}", op));
+            Identifier(ref op) => {
+                return Err(format!("unimplemented Identifier {}", op));
             }
         }
     }
@@ -82,7 +94,7 @@ pub fn evaluate(expr: &str) -> Result<f64, String> {
         println!("{:?}", token);
     }
 
-    Ok(0.0)
+    execute(tokens)
 }
 
 #[cfg(test)]
@@ -90,19 +102,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn eval_one_positive_operand() {
+    fn eval_one_positive_number() {
         assert_eq!(evaluate("1").unwrap(), 1.0);
         assert_eq!(evaluate("543").unwrap(), 543.0);
     }
 
     #[test]
-    fn eval_one_negative_operand() {
+    fn eval_one_negative_number() {
         assert_eq!(evaluate("-1").unwrap(), -1.0);
         assert_eq!(evaluate("-543").unwrap(), -543.0);
     }
 
     #[test]
-    fn eval_one_decimal_operand() {
+    fn eval_one_decimal_number() {
         assert_eq!(evaluate("0.5").unwrap(), 0.5);
         assert_eq!(evaluate("-0.5").unwrap(), -0.5);
     }
@@ -159,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn eval_mixed_operators() {
+    fn eval_mixed_Identifiers() {
         assert_eq!(evaluate("1 2 + 3 * 4 -").unwrap(), 5.0);
     }
 }
