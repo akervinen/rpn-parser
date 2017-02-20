@@ -34,35 +34,55 @@ pub fn execute(tokens: Vec<Token>) -> Result<f64, String> {
                 stack.push(val);
             },
             Identifier(ref op) if op == "+" => {
-                let val2 = stack.pop().expect("not enough operands");
-                let val1 = stack.pop().expect("not enough operands");
+                if stack.len() < 2 {
+                    return Err("not enough operands".into());
+                }
+
+                let val2 = stack.pop().unwrap();
+                let val1 = stack.pop().unwrap();
 
                 println!("{} + {}", val1, val2);
                 stack.push(val1 + val2);
             },
             Identifier(ref op) if op == "-" => {
-                let val2 = stack.pop().expect("not enough operands");
-                let val1 = stack.pop().expect("not enough operands");
+                if stack.len() < 2 {
+                    return Err("not enough operands".into());
+                }
+
+                let val2 = stack.pop().unwrap();
+                let val1 = stack.pop().unwrap();
 
                 println!("{} - {}", val1, val2);
                 stack.push(val1 - val2);
             },
             Identifier(ref op) if op == "x" => {
-                let val2 = stack.pop().expect("not enough operands");
-                let val1 = stack.pop().expect("not enough operands");
+                if stack.len() < 2 {
+                    return Err("not enough operands".into());
+                }
+
+                let val2 = stack.pop().unwrap();
+                let val1 = stack.pop().unwrap();
 
                 println!("{} × {}", val1, val2);
                 stack.push(val1 * val2);
             },
             Identifier(ref op) if op == "/" => {
-                let val2 = stack.pop().expect("not enough operands");
-                let val1 = stack.pop().expect("not enough operands");
+                if stack.len() < 2 {
+                    return Err("not enough operands".into());
+                }
+
+                let val2 = stack.pop().unwrap();
+                let val1 = stack.pop().unwrap();
 
                 println!("{} / {}", val1, val2);
                 stack.push(val1 / val2);
             },
             Identifier(ref op) if op == "sin" => {
-                let val = stack.pop().expect("not enough operands");
+                if stack.len() < 1 {
+                    return Err("not enough operands".into());
+                }
+
+                let val = stack.pop().unwrap();
 
                 println!("sin {}", val);
                 stack.push(val.sin());
