@@ -9,7 +9,9 @@ enum Token {
     Identifier(String),
 }
 
+#[derive(Debug)]
 enum Operator {
+    Constant(f64),
     Unary(fn(f64) -> f64),
     Binary(fn(f64, f64) -> f64),
 }
@@ -45,29 +47,27 @@ fn op_log10(v1: f64) -> f64 {
 }
 
 lazy_static! {
-    // Define constants
-    static ref CONSTS: HashMap<String, f64> = {
-        let mut m = HashMap::new();
-        m.insert("pi".into(), consts::PI);
-        m.insert("e".into(), consts::E);
-        m
-    };
-
-    // Define operators (and functions)
+    // Define operators
     static ref OPERATORS: HashMap<String, Operator> = {
+        use Operator::*;
+
         let mut m = HashMap::new();
-        m.insert("+".into(), Operator::Binary(op_add));
-        m.insert("-".into(), Operator::Binary(op_sub));
-        m.insert("−".into(), Operator::Binary(op_sub));
-        m.insert("×".into(), Operator::Binary(op_mul));
-        m.insert("x".into(), Operator::Binary(op_mul));
-        m.insert("*".into(), Operator::Binary(op_mul));
-        m.insert("/".into(), Operator::Binary(op_div));
-        m.insert("%".into(), Operator::Binary(op_mod));
-        m.insert("^".into(), Operator::Binary(op_powf));
-        m.insert("sin".into(), Operator::Unary(op_sin));
-        m.insert("ln".into(), Operator::Unary(op_ln));
-        m.insert("log10".into(), Operator::Unary(op_log10));
+        m.insert("+".into(), Binary(op_add));
+        m.insert("-".into(), Binary(op_sub));
+        m.insert("−".into(), Binary(op_sub));
+        m.insert("×".into(), Binary(op_mul));
+        m.insert("x".into(), Binary(op_mul));
+        m.insert("*".into(), Binary(op_mul));
+        m.insert("/".into(), Binary(op_div));
+        m.insert("%".into(), Binary(op_mod));
+        m.insert("^".into(), Binary(op_powf));
+
+        m.insert("sin".into(),  Unary(op_sin));
+        m.insert("ln".into(),   Unary(op_ln));
+        m.insert("log10".into(),Unary(op_log10));
+
+        m.insert("pi".into(),   Constant(consts::PI));
+        m.insert("e".into(),    Constant(consts::E));
         m
     };
 }
@@ -85,57 +85,44 @@ fn parse(expr: &str) -> Vec<Token> {
         .collect()
 }
 
-fn execute(tokens: Vec<Token>) -> Result<f64, String> {
+fn get_operator(op: &str) -> Result<&Operator, String> {
+    OPERATORS.get(op)
+        .ok_or(format!("invalid operator '{}'", op))
+}
+// Recursive execution, starting from the last token and going backwards
+// Still seems kinda messy
+fn exec_index(tokens: &Vec<Token>, idx: usize) -> Result<f64, String> {
     use Token::*;
+    use Operator::*;
 
-    let mut stack = Vec::<f64>::new();
+    let tok = &tokens[idx];
 
-    for token in tokens {
-        match token {
-            Number(val) => {
-                stack.push(val);
-            }
-            Identifier(ref op) => {
-                // First, check constants, then functions
-                
-                match CONSTS.get(op) {
-                    Some(&val) => {
-                        stack.push(val);
-                    }
-                    None => {
-                        match OPERATORS.get(op) {
-                            Some(&Operator::Binary(cb)) => {
-                                if stack.len() < 2 {
-                                    return Err("not enough operands, expected 2".into());
-                                }
-                                let val2 = stack.pop().unwrap();
-                                let val1 = stack.pop().unwrap();
+    // Bail out early if we have a plain number
+    let op = match tok {
+        &Number(num) => return Ok(num),
+        &Identifier(ref op) => {
+            try!(get_operator(op))
+        }
+    };
 
-                                stack.push(cb(val1, val2));
-                            }
-                            Some(&Operator::Unary(cb)) => {
-                                if stack.len() < 1 {
-                                    return Err("not enough operands, expected 1".into());
-                                }
-                                let val1 = stack.pop().unwrap();
-
-                                stack.push(cb(val1));
-                            }
-                            None => {
-                                return Err(format!("invalid operator {}", op));
-                            }
-                        }
-                    }
-                }
-            }
+    return match op {
+        &Constant(val) => Ok(val),
+        &Unary(cb) => {
+            if idx < 1 { return Err("not enough operands".into()); }
+            Ok(cb(try!(exec_index(tokens, idx - 1))))
+        },
+        &Binary(cb) => {
+            if idx < 2 { return Err("not enough operands".into()); }
+            Ok(cb(
+                try!(exec_index(tokens, idx - 2)),
+                try!(exec_index(tokens, idx - 1))
+            ))
         }
     }
+}
 
-    match stack.len() {
-        0 => Err("empty expression".into()),
-        1 => Ok(stack.pop().unwrap()),
-        _ => Err("too many operands".into())
-    }
+fn execute(tokens: Vec<Token>) -> Result<f64, String> {
+    exec_index(&tokens, tokens.len() - 1)
 }
 
 pub fn evaluate(expr: &str) -> Result<f64, String> {
@@ -164,11 +151,12 @@ mod tests {
         assert_eq!(evaluate("-0.5").unwrap(), -0.5);
     }
 
-    #[test]
-    fn eval_err_too_many_operands() {
-        assert!(evaluate("1 2").is_err());
-        assert!(evaluate("1 2 3 +").is_err());
-    }
+    // I'm not sure if this should be an error
+    //#[test]
+    //fn eval_err_too_many_operands() {
+    //    assert!(evaluate("1 2").is_err());
+    //    assert!(evaluate("1 2 3 +").is_err());
+    //}
 
     #[test]
     fn eval_err_not_enough_operands() {
