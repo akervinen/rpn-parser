@@ -33,18 +33,6 @@ fn op_div(v1: f64, v2: f64) -> f64 {
 fn op_mod(v1: f64, v2: f64) -> f64 {
     v1 % v2
 }
-fn op_powf(v1: f64, v2: f64) -> f64 {
-    v1.powf(v2)
-}
-fn op_sin(v1: f64) -> f64 {
-    v1.sin()
-}
-fn op_ln(v1: f64) -> f64 {
-    v1.ln()
-}
-fn op_log10(v1: f64) -> f64 {
-    v1.log10()
-}
 
 lazy_static! {
     // Define operators
@@ -60,11 +48,14 @@ lazy_static! {
         m.insert("*".into(), Binary(op_mul));
         m.insert("/".into(), Binary(op_div));
         m.insert("%".into(), Binary(op_mod));
-        m.insert("^".into(), Binary(op_powf));
+        m.insert("^".into(), Binary(f64::powf));
 
-        m.insert("sin".into(),  Unary(op_sin));
-        m.insert("ln".into(),   Unary(op_ln));
-        m.insert("log10".into(),Unary(op_log10));
+        m.insert("deg2rad".into(), Unary(f64::to_radians));
+        m.insert("rad2deg".into(), Unary(f64::to_degrees));
+        m.insert("sin".into(),  Unary(f64::sin));
+        m.insert("cos".into(), Unary(f64::cos));
+        m.insert("ln".into(),   Unary(f64::ln));
+        m.insert("log10".into(),Unary(f64::log10));
 
         m.insert("pi".into(),   Constant(consts::PI));
         m.insert("e".into(),    Constant(consts::E));
@@ -218,5 +209,10 @@ mod tests {
     #[test]
     fn eval_text_operator() {
         assert_eq!(evaluate("pi 2 / sin").unwrap(), 1.0);
+    }
+
+    #[test]
+    fn eval_complicated() {
+        assert_eq!(evaluate("e 2 ^ ln 3 * 60 deg2rad cos 8 * + 4 0.5 ^  3 * 1 - /").unwrap(), 2.0);
     }
 }
