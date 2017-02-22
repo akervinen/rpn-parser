@@ -91,16 +91,21 @@ fn get_operator(op: &str) -> Result<&Operator, String> {
 }
 // Recursive execution, starting from the last token and going backwards
 // Still seems kinda messy
-fn exec_index(tokens: &Vec<Token>, idx: usize) -> Result<f64, String> {
+fn exec_index<I>(tokens: &mut I) -> Result<f64, String>
+    where I: Iterator<Item = Token> {
     use Token::*;
     use Operator::*;
 
-    let tok = &tokens[idx];
+    let next = tokens.next();
+    let tok = match next {
+        Some(val) => val,
+        None => return Err("not enough operands".into())
+    };
 
     // Bail out early if we have a plain number
     let op = match tok {
-        &Number(num) => return Ok(num),
-        &Identifier(ref op) => {
+        Number(num) => return Ok(num),
+        Identifier(ref op) => {
             try!(get_operator(op))
         }
     };
@@ -108,21 +113,18 @@ fn exec_index(tokens: &Vec<Token>, idx: usize) -> Result<f64, String> {
     return match op {
         &Constant(val) => Ok(val),
         &Unary(cb) => {
-            if idx < 1 { return Err("not enough operands".into()); }
-            Ok(cb(try!(exec_index(tokens, idx - 1))))
+            Ok(cb(try!(exec_index(tokens))))
         },
         &Binary(cb) => {
-            if idx < 2 { return Err("not enough operands".into()); }
-            Ok(cb(
-                try!(exec_index(tokens, idx - 2)),
-                try!(exec_index(tokens, idx - 1))
-            ))
+            let val2 = try!(exec_index(tokens));
+            let val1 = try!(exec_index(tokens));
+            Ok(cb(val1, val2))
         }
     }
 }
 
 fn execute(tokens: Vec<Token>) -> Result<f64, String> {
-    exec_index(&tokens, tokens.len() - 1)
+    exec_index(&mut tokens.into_iter().rev())
 }
 
 pub fn evaluate(expr: &str) -> Result<f64, String> {
